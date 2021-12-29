@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# crontab configuration:
+# 0 8 * * * /bin/sh /usr/local/sbin/backup.sh
+
+do_backup() {
+    BACKUP_CMD="PASSPHRASE=\"${GPG_PASS}\" duplicity \
+        --full-if-older-than 1M \
+        --encrypt-key ${GPG_KEY} \
+        ${BACKUP_DIR} \
+        ${DEST}"
+
+    eval ${BACKUP_CMD}
+}
+
+do_verify() {
+    VERIFY_CMD="PASSPHRASE=\"${GPG_PASS}\" duplicity verify -v4 \
+        --encrypt-key ${GPG_KEY} \
+        ${DEST} \
+        ${BACKUP_DIR}"
+
+    eval ${VERIFY_CMD}
+}
+
+do_clean() {
+    CLEAN_CMD="duplicity remove-older-than 2M --force \
+        --encrypt-key ${GPG_KEY} \
+        file://${BACKUP_DIR}"
+
+    eval ${CLEAN_CMD}
+}
+
+do_restore() {
+    if [ "$1" = "" ]; then
+        echo "No restoring path provided! use --restore path/to/what/you/want/to/restore"
+        exit 1
+    fi
+
+    RESTORE_CMD="PASSPHRASE=\"${GPG_PASS}\" duplicity restore \
+            --file-to-restore $1 ${DEST} $1"
+
+    eval ${RESTORE_CMD}
+}
+
+do_list() {
+    LIST_CMD="duplicity \
+    list-current-files \
+    --encrypt-key ${GPG_KEY} \
+    ${DEST}"
+
+    eval ${LIST_CMD}
+}
+
+do_status() {
+    STATUS_CMD="duplicity \
+        collection-status \
+        ${DEST}"
+    
+    eval ${STATUS_CMD}
+}
+
+print_help() { 
+  echo "Usage: $PROGRAM OPTION:"
+  echo "    [ -b | --backup ] - performs backup"
+  echo "    [ -r | --restore PATH_TO_RESTORE ] - restores file backup from remote"
+  echo "    [ -l | --list ] - shows bakcup content"
+  echo "    [ -c | --config PATH_TO_CONFIG ] - uses PATH_TO_CONFIG as source will all credentials"
+  echo "    [ -h | --help ] - prints this help"
+  echo "    [ -v | --verify ] - verifies backup state. See duplicity verify command for more details"
+  echo "    [ -s | --status ] - prints backup status information (last time, etc). See duplicity status command for more details"
+}
+
+CMD=unset
+ARG_1=unset
+CONFIG_PATH="./env.sh"
+CONFIG_REQUIRED=false
+PROGRAM=$0
+
+OPTIONS=`getopt -a -n $PROGRAM -o blhvsc:r: -l backup,list,help,verify,status,config:restore: -- "$@"`
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  print_help
+  exit 2 
+fi
+
+eval set -- "$OPTIONS"
+while true; do
+    case "$1" in
+        -b|--backup) CMD=do_backup ; CONFIG_REQUIRED=true ; shift ;;
+        -l|--list) CMD=do_list ; CONFIG_REQUIRED=true ; shift ;;
+        -h|--help) CMD=print_help ; shift ;;
+        -v|--verify) CMD=do_verify ; CONFIG_REQUIRED=true ; shift ;;
+        -s|--status) CMD=do_status ; CONFIG_REQUIRED=true ; shift ;;
+        -c|--config) CONFIG_PATH=$2 ; shift 2 ;;
+        -r|--restore) CMD=do_restore ; CONFIG_REQUIRED=true ; ARG_1=$2 ; shift 2 ;;
+        --) shift ; break ;;
+        *) echo "$PROGRAM: Unexpected option \"$1\""; print_help ; exit 2 ;;
+    esac
+done
+
+if [ $CONFIG_REQUIRED = true ]; then
+    if [ ! -f $CONFIG_PATH ]; then
+        echo "Config file does not exist: '$CONFIG_PATH'"
+        exit 2
+    fi
+    # LOAD CREDENTIALS
+    . $CONFIG_PATH
+fi
+
+# EXECUTE COMMAND
+$CMD $ARG_1 $ARG_2

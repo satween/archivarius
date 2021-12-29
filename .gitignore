@@ -1,5 +1,5 @@
 *
 !.gitignore
-!backup.sh
+!archivarius
 !README.md
 !credentials.template
