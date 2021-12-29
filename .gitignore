@@ -1,0 +1,5 @@
+*
+!.gitignore
+!backup.sh
+!README.md
+!env.example
