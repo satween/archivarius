@@ -36,8 +36,8 @@ DISK_USER=# Username for your yandex.dist account (example@yandex.ru)
 DISK_PASSWORD=# Password, obtained on the first step of this instruction
 GPG_KEY=# Id of the key, obtained on the second step of this instruction (034542F74F3C8659)
 GPG_PASSWORD=# Optional password from secret gpg-key. Required only for restoring
-DEST=# Destination of backup files on your yandex.disk
-BACKUP_DIR=# Path of the main dir to backup (webdavs://${DISK_USER}:${DISK_PASSWORD}@webdav.yandex.ru/backup/testmachine)
+DEST=# Destination of backup files on your yandex.disk (webdavs://${DISK_USER}:${DISK_PASSWORD}@webdav.yandex.ru/backup/testmachine)
+BACKUP_DIR=# Path of the main dir to backup
 INCLUDES_EXCLUDES="--exclude '/home/*/Downloads' \
     --exclude '/home/*/.cache' \
     --exclude '/home/*/Music' \
