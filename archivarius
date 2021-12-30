@@ -52,9 +52,17 @@ do_list() {
 }
 
 do_status() {
-    STATUS_CMD="duplicity \
+    if [ $1 = '.' ]; then
+        STATUS_CMD="duplicity \
         collection-status \
+        ${DEST}"        
+    else
+        STATUS_CMD="duplicity \
+        collection-status \
+        --file-changed $1 \
         ${DEST}"
+    fi
+
     
     eval ${STATUS_CMD}
 }
@@ -62,12 +70,12 @@ do_status() {
 print_help() { 
   echo "Usage: $PROGRAM OPTION:"
   echo "    [ -b | --backup ] - performs backup"
-  echo "    [ -r | --restore PATH_TO_RESTORE ] - restores file backup from remote"
-  echo "    [ -l | --list ] - shows bakcup content"
+  echo "    [ -r | --restore PATH_TO_RESTORE ] - restores content from backup"
+  echo "    [ -l | --list ] - shows the contents of the backup"
   echo "    [ -c | --config PATH_TO_CONFIG ] - uses PATH_TO_CONFIG as source will all credentials"
   echo "    [ -h | --help ] - prints this help"
-  echo "    [ -v | --verify ] - verifies backup state. See duplicity verify command for more details"
-  echo "    [ -s | --status ] - prints backup status information (last time, etc). See duplicity status command for more details"
+  echo "    [ -v | --verify ] - verifies backup state. See 'duplicity verify' command for more details"
+  echo "    [ -s | --status ] - prints backup status information (last time, etc). See 'duplicity status' command for more details"
 }
 
 CMD=unset
@@ -76,7 +84,7 @@ CONFIG_PATH="./env.sh"
 CONFIG_REQUIRED=false
 PROGRAM=$0
 
-OPTIONS=`getopt -a -n $PROGRAM -o blhvsc:r: -l backup,list,help,verify,status,config:restore: -- "$@"`
+OPTIONS=`getopt -a -n $PROGRAM -o blhvs:c:r: -l backup,list,help,verify,status:,config:restore: -- "$@"`
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   print_help
@@ -90,7 +98,7 @@ while true; do
         -l|--list) CMD=do_list ; CONFIG_REQUIRED=true ; shift ;;
         -h|--help) CMD=print_help ; shift ;;
         -v|--verify) CMD=do_verify ; CONFIG_REQUIRED=true ; shift ;;
-        -s|--status) CMD=do_status ; CONFIG_REQUIRED=true ; shift ;;
+        -s|--status) CMD=do_status ; CONFIG_REQUIRED=true ; ARG_1=$2 ; shift 2 ;;
         -c|--config) CONFIG_PATH=$2 ; shift 2 ;;
         -r|--restore) CMD=do_restore ; CONFIG_REQUIRED=true ; ARG_1=$2 ; shift 2 ;;
         --) shift ; break ;;

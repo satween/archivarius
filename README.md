@@ -24,7 +24,7 @@ gpg --armor --export-secret-keys -a B672DD58EB448D8BF9D12310034542F74F3C8659  > 
 ```
 
 
-> If you do not need to restore backup frequently you can remove gpg key from currrent machine (don't forger to save exported files!) by command: `gpg --delete-secret-key 034542F74F3C8659`
+> If you do not need to restore backup frequently you can remove gpg key from currrent machine (don't forger to save exported files!) by command: `gpg --delete-secret-key 034542F74F3C8659`, but it might lead to erros with decrypting manifest on updates
 
 
 > If `gpg` hangs on any command, try to restart agent:`gpgconf --kill gpg-agent`
